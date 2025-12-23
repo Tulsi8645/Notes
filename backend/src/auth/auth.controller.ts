@@ -39,11 +39,25 @@ export class AuthController {
     @Get('google/callback')
     @UseGuards(GoogleAuthGuard)
     async googleAuthRedirect(@Request() req: any, @Res() res: express.Response) {
-        const user = await this.authService.validateOAuthUser(req.user);
-        const { access_token } = await this.authService.login(user);
-        const frontendUrl = this.configService.get('FRONTEND_URL');
+        try {
+            const user = await this.authService.validateOAuthUser(req.user);
+            const { access_token } = await this.authService.login(user); // Updated login adds sub and email
+            const frontendUrl = this.configService.get('FRONTEND_URL');
 
-        return res.redirect(`${frontendUrl}/login?token=${access_token}&user=${encodeURIComponent(JSON.stringify(user))}`);
+            res.cookie('token', access_token, {
+                httpOnly: true,
+                secure: this.configService.get('NODE_ENV') === 'production',
+                sameSite: 'lax', // Use lax for OAuth redirects to allow cross-site cookie setting
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+                path: '/' // Ensure accessible across the site
+            });
+
+            return res.redirect(`${frontendUrl}/login?auth_success=true`);
+        } catch (error) {
+            console.error('Google Auth Error:', error);
+            const frontendUrl = this.configService.get('FRONTEND_URL');
+            return res.redirect(`${frontendUrl}/login?error=auth_failed`);
+        }
     }
 
     @Get('github')
@@ -53,11 +67,25 @@ export class AuthController {
     @Get('github/callback')
     @UseGuards(GithubAuthGuard)
     async githubAuthRedirect(@Request() req: any, @Res() res: express.Response) {
-        const user = await this.authService.validateOAuthUser(req.user);
-        const { access_token } = await this.authService.login(user);
-        const frontendUrl = this.configService.get('FRONTEND_URL');
+        try {
+            const user = await this.authService.validateOAuthUser(req.user);
+            const { access_token } = await this.authService.login(user);
+            const frontendUrl = this.configService.get('FRONTEND_URL');
 
-        return res.redirect(`${frontendUrl}/login?token=${access_token}&user=${encodeURIComponent(JSON.stringify(user))}`);
+            res.cookie('token', access_token, {
+                httpOnly: true,
+                secure: this.configService.get('NODE_ENV') === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: '/'
+            });
+
+            return res.redirect(`${frontendUrl}/login?auth_success=true`);
+        } catch (error) {
+            console.error('GitHub Auth Error:', error);
+            const frontendUrl = this.configService.get('FRONTEND_URL');
+            return res.redirect(`${frontendUrl}/login?error=auth_failed`);
+        }
     }
 }
 

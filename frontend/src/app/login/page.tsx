@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { LogIn, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { loginAction, setAuthCookie } from '@/lib/actions';
+import { loginAction, setAuthCookie, getProfile } from '@/lib/actions';
 
 
 function LoginPageContent() {
@@ -18,18 +18,24 @@ function LoginPageContent() {
 
     useEffect(() => {
         const handleOAuthRedirect = async () => {
-            const token = searchParams.get('token');
-            const userData = searchParams.get('user');
+            const authSuccess = searchParams.get('auth_success');
+            const error = searchParams.get('error');
 
-            if (token && userData) {
+            if (authSuccess) {
                 try {
-                    console.log('OAuth redirect detected, setting cookie...');
-                    await setAuthCookie(token);
-                    const user = JSON.parse(decodeURIComponent(userData));
-                    login(user);
+                    console.log('OAuth success detected, fetching profile...');
+                    const user = await getProfile();
+                    if (user) {
+                        login(user);
+                    } else {
+                        setError('Failed to retrieve user profile');
+                    }
                 } catch (e) {
                     console.error('Failed to handle OAuth redirect', e);
+                    setError('Authentication failed');
                 }
+            } else if (error) {
+                setError('Authentication failed');
             }
         };
 
