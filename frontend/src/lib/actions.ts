@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN;
 
 export async function setAuthCookie(token: string) {
     console.log('Setting auth cookie...');
@@ -14,6 +15,7 @@ export async function setAuthCookie(token: string) {
         sameSite: 'strict',
         maxAge: 60 * 60 * 24 * 7, // 1 week
         path: '/',
+        domain: COOKIE_DOMAIN,
     });
     console.log('Auth cookie set successfully');
     return { success: true };
@@ -33,6 +35,7 @@ export async function loginAction(formData: any) {
                 sameSite: 'strict',
                 maxAge: 60 * 60 * 24 * 7, // 1 week
                 path: '/',
+                domain: COOKIE_DOMAIN,
             });
             return { success: true, user };
         }
@@ -60,6 +63,7 @@ export async function signupAction(formData: any) {
                 sameSite: 'strict',
                 maxAge: 60 * 60 * 24 * 7, // 1 week
                 path: '/',
+                domain: COOKIE_DOMAIN,
             });
             return { success: true, user };
         }
@@ -76,7 +80,11 @@ export async function signupAction(formData: any) {
 export async function logoutAction() {
     console.log('Logging out from Server Action...');
     const cookieStore = await cookies();
-    cookieStore.delete('token');
+    cookieStore.set('token', '', {
+        maxAge: 0,
+        path: '/',
+        domain: COOKIE_DOMAIN
+    });
     return { success: true };
 }
 
