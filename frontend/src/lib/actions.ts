@@ -86,7 +86,7 @@ export async function getProfile() {
     const token = cookieStore.get('token')?.value;
 
     if (!token) {
-        console.log('No token found in cookies');
+        console.log('No token found in cookies. Available cookies:', cookieStore.getAll().map(c => c.name));
         return null;
     }
 

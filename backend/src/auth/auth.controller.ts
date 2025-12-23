@@ -47,9 +47,10 @@ export class AuthController {
             res.cookie('token', access_token, {
                 httpOnly: true,
                 secure: this.configService.get('NODE_ENV') === 'production',
-                sameSite: 'lax', // Use lax for OAuth redirects to allow cross-site cookie setting
-                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                path: '/' // Ensure accessible across the site
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+                path: '/',
+                domain: this.configService.get('COOKIE_DOMAIN'), // Allow sharing across subdomains
             });
 
             return res.redirect(`${frontendUrl}/login?auth_success=true`);
@@ -77,7 +78,8 @@ export class AuthController {
                 secure: this.configService.get('NODE_ENV') === 'production',
                 sameSite: 'lax',
                 maxAge: 7 * 24 * 60 * 60 * 1000,
-                path: '/'
+                path: '/',
+                domain: this.configService.get('COOKIE_DOMAIN'),
             });
 
             return res.redirect(`${frontendUrl}/login?auth_success=true`);
